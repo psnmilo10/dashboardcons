@@ -7,16 +7,18 @@ import {
   BarChart3,
   RefreshCw
 } from 'lucide-react';
+
 import { MetricCard } from './components/MetricCard';
 import { SalesChart } from './components/SalesChart';
 import { TopProductsTable } from './components/TopProductsTable';
 import { SalesPersonRanking } from './components/SalesPersonRanking';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
-import { SalesRecord, SalesMetrics } from './types/SalesData';
-import { fetchSalesData, calculateMetrics } from './services/salesDataService';
-import { computeSalesTotals } from './services/salesDataService';
 
+import { SalesRecord, SalesMetrics } from './types/SalesData';
+
+// ⬇️ unificamos los imports del service, incluyendo computeSalesTotals
+import { fetchSalesData, calculateMetrics, computeSalesTotals } from './services/salesDataService';
 
 function App() {
   const [salesData, setSalesData] = useState<SalesRecord[]>([]);
@@ -58,6 +60,7 @@ function App() {
     return <ErrorMessage onRetry={loadSalesData} />;
   }
 
+  // Formateador de dinero para las tarjetas
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
@@ -66,12 +69,9 @@ function App() {
       maximumFractionDigits: 0,
     }).format(amount);
   };
-  
-// SUPONIENDO que tu array de filas se llama 'rows'.
-// Si se llama distinto (data, sales, etc.), reemplázalo aquí.
-const { totalSales, monthlySales } = computeSalesTotals(rows, new Date());
 
-const formatUSD = (n: number) => `${Math.round(n).toLocaleString('es-PE')} US$`;
+  // ✅ Cálculo real de Totales vs. Mes actual (usa las filas crudas salesData)
+  const { totalSales, monthlySales } = computeSalesTotals(salesData, new Date());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -104,13 +104,13 @@ const formatUSD = (n: number) => `${Math.round(n).toLocaleString('es-PE')} US$`;
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             title="Ventas Totales"
-            value={formatCurrency(metrics.totalVentas)}
+            value={formatCurrency(totalSales)}       {/* ← ahora usando computeSalesTotals */}
             icon={DollarSign}
             color="blue"
           />
           <MetricCard
             title="Ventas del Mes"
-            value={formatCurrency(metrics.ventasDelMes)}
+            value={formatCurrency(monthlySales)}     {/* ← ahora usando computeSalesTotals */}
             icon={Calendar}
             color="green"
           />
@@ -191,3 +191,4 @@ const formatUSD = (n: number) => `${Math.round(n).toLocaleString('es-PE')} US$`;
 }
 
 export default App;
+
