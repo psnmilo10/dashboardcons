@@ -15,6 +15,8 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 import { SalesRecord, SalesMetrics } from './types/SalesData';
 import { fetchSalesData, calculateMetrics } from './services/salesDataService';
+import { computeSalesTotals } from './services/salesDataService';
+
 
 function App() {
   const [salesData, setSalesData] = useState<SalesRecord[]>([]);
@@ -64,6 +66,12 @@ function App() {
       maximumFractionDigits: 0,
     }).format(amount);
   };
+  
+// SUPONIENDO que tu array de filas se llama 'rows'.
+// Si se llama distinto (data, sales, etc.), reemplázalo aquí.
+const { totalSales, monthlySales } = computeSalesTotals(rows, new Date());
+
+const formatUSD = (n: number) => `${Math.round(n).toLocaleString('es-PE')} US$`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
