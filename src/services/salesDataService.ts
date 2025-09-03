@@ -42,6 +42,46 @@ export function isSameMonthAndYear(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
+// Tipado flexible para filas provenientes del Excel/Sheets
+type Row = Record<string, any>;
+
+/**
+ * Suma el total general y el total del mes actual.
+ * - Usa la columna "Precio de venta" (o variantes) para el monto.
+ * - Usa la columna "Fecha" (o variantes) para filtrar por mes/año.
+ */
+export function computeSalesTotals(rows: Row[], now: Date = new Date()) {
+  let total = 0;
+  let month = 0;
+
+  for (const r of rows ?? []) {
+    // Monto: intenta varias llaves comunes
+    const amount = parseMoneyToNumber(
+      r["Precio de venta"] ??
+      r["Precio de Venta"] ??
+      r.precioVenta ??
+      r.precio_venta ??
+      r.total ??
+      0
+    );
+    total += amount;
+
+    // Fecha: intenta varias llaves comunes
+    const dt = parsePeruDate(
+      r["Fecha"] ?? r.fecha ?? r["fecha"] ?? null,
+      now
+    );
+
+    // Si fecha válida y coincide mes/año con "now", suma al mes
+    if (dt && isSameMonthAndYear(dt, now)) {
+      month += amount;
+    }
+  }
+
+  return { totalSales: total, monthlySales: month };
+}
+
+
 
 const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OtgpEgn9R58bqeEE9AjbxWJev4sBR12KP6p_DcOfg7U/export?format=csv&gid=0';
 
