@@ -58,7 +58,6 @@ export function parsePeruDate(input: any, now: Date = new Date()): Date | null {
   return null;
 }
 
-}
 
 export function isSameMonthAndYear(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
