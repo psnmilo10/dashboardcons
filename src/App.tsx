@@ -16,8 +16,6 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 
 import { SalesRecord, SalesMetrics } from './types/SalesData';
-
-// ⬇️ unificamos los imports del service, incluyendo computeSalesTotals
 import { fetchSalesData, calculateMetrics, computeSalesTotals } from './services/salesDataService';
 
 function App() {
@@ -70,7 +68,7 @@ function App() {
     }).format(amount);
   };
 
-  // ✅ Cálculo real de Totales vs. Mes actual (usa las filas crudas salesData)
+  // Cálculo de Totales vs. Mes actual usando las filas crudas
   const { totalSales, monthlySales } = computeSalesTotals(salesData, new Date());
 
   return (
@@ -104,13 +102,13 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             title="Ventas Totales"
-            value={formatCurrency(totalSales)}       {/* ← ahora usando computeSalesTotals */}
+            value={formatCurrency(totalSales)}
             icon={DollarSign}
             color="blue"
           />
           <MetricCard
             title="Ventas del Mes"
-            value={formatCurrency(monthlySales)}     {/* ← ahora usando computeSalesTotals */}
+            value={formatCurrency(monthlySales)}
             icon={Calendar}
             color="green"
           />
@@ -191,4 +189,3 @@ function App() {
 }
 
 export default App;
-
