@@ -2,6 +2,47 @@ import { SalesRecord, SalesMetrics } from '../types/SalesData';
 import { parseCSV } from '../utils/csvParser';
 import { parseISO, isValid, format, isSameMonth } from 'date-fns';
 
+// --- Parsear dinero tipo "69.000$" → 69000
+export function parseMoneyToNumber(v: any): number {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (!v) return 0;
+  const digits = String(v).replace(/[^\d]/g, "");
+  return digits ? Number(digits) : 0;
+}
+
+// --- Normaliza "dd/MM" o "dd/MM/yyyy" a Date (America/Lima por defecto)
+export function parsePeruDate(input: any, now: Date = new Date()): Date | null {
+  if (!input) return null;
+
+  if (input instanceof Date && !isNaN(input.valueOf())) return input;
+
+  const s = String(input).trim();
+
+  // dd/MM/yyyy
+  let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    let d = Number(m[1]), mo = Number(m[2]) - 1, y = Number(m[3]);
+    if (y < 100) y += 2000; // por si ponen 25
+    const dt = new Date(y, mo, d);
+    return isNaN(dt.valueOf()) ? null : dt;
+  }
+
+  // dd/MM (sin año) → asumimos año actual
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) {
+    const d = Number(m[1]), mo = Number(m[2]) - 1, y = now.getFullYear();
+    const dt = new Date(y, mo, d);
+    return isNaN(dt.valueOf()) ? null : dt;
+  }
+
+  return null;
+}
+
+export function isSameMonthAndYear(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+
 const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OtgpEgn9R58bqeEE9AjbxWJev4sBR12KP6p_DcOfg7U/export?format=csv&gid=0';
 
 export async function fetchSalesData(): Promise<SalesRecord[]> {
