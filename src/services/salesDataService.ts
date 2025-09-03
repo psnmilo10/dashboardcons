@@ -10,24 +10,36 @@ export function parseMoneyToNumber(v: any): number {
   return digits ? Number(digits) : 0;
 }
 
-// --- Normaliza "dd/MM" o "dd/MM/yyyy" a Date (America/Lima por defecto)
+// --- Normaliza "dd/MM", "dd-MM", "dd/MM/yyyy", "MM/yyyy", ISO y serial Excel a Date
 export function parsePeruDate(input: any, now: Date = new Date()): Date | null {
-  if (!input) return null;
+  if (input == null) return null;
 
+  // Ya es Date
   if (input instanceof Date && !isNaN(input.valueOf())) return input;
+
+  // Serial de Excel (número de días desde 1899-12-30)
+  if (typeof input === "number" && Number.isFinite(input)) {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const dt = new Date(excelEpoch.getTime() + input * 86400000);
+    return isNaN(dt.valueOf()) ? null : dt;
+  }
 
   const s = String(input).trim();
 
-  // dd/MM/yyyy
+  // ISO o formatos parseables por Date()
+  const iso = new Date(s);
+  if (!isNaN(iso.valueOf())) return iso;
+
+  // dd[/|-]MM[/|-]yyyy
   let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
   if (m) {
     let d = Number(m[1]), mo = Number(m[2]) - 1, y = Number(m[3]);
-    if (y < 100) y += 2000; // por si ponen 25
+    if (y < 100) y += 2000; // '25' -> 2025
     const dt = new Date(y, mo, d);
     return isNaN(dt.valueOf()) ? null : dt;
   }
 
-  // dd/MM (sin año) → asumimos año actual
+  // dd[/|-]MM  (sin año → usa año actual)
   m = s.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
   if (m) {
     const d = Number(m[1]), mo = Number(m[2]) - 1, y = now.getFullYear();
@@ -35,7 +47,17 @@ export function parsePeruDate(input: any, now: Date = new Date()): Date | null {
     return isNaN(dt.valueOf()) ? null : dt;
   }
 
+  // MM[/|-]yyyy (sin día → día 1)
+  m = s.match(/^(\d{1,2})[\/\-](\d{4})$/);
+  if (m) {
+    const mo = Number(m[1]) - 1, y = Number(m[2]);
+    const dt = new Date(y, mo, 1);
+    return isNaN(dt.valueOf()) ? null : dt;
+  }
+
   return null;
+}
+
 }
 
 export function isSameMonthAndYear(a: Date, b: Date): boolean {
